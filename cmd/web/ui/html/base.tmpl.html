@@ -1,0 +1,39 @@
+{{define "base"}}
+<!doctype html>
+<html lang='en'>
+
+<head>
+    <meta charset='utf-8'>
+    <title> {{template "title" .}} - BaseRegistry</title>
+    <!--  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+
+<body>
+    <header>
+        <h1><a href='/'>Base Registry</a></h1>
+    </header>
+
+    <div>{{template "nav" .}}</div>
+    <main>
+        
+        
+        {{with .Flash}}
+        <div class='flash'>
+            <div class="flash-content">{{.}}</div>
+        </div>
+        {{end}}
+        {{template "main" .}}
+    </main>
+    <footer>Powered by <a href='https://golang.org'>GO</a> </footer>
+
+    <script src="./static/js/script.js"></script>
+
+</body>
+
+
+</html>
+{{end}}

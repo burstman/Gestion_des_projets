@@ -1,0 +1,36 @@
+{{define "title"}}Create a New Data{{end}}
+{{define "main"}}
+<form action='/registry/create' method='POST' class="registration-form">
+    <div>
+        <label>Name: </label>
+        <input type='text' name='name'>
+    </div>
+    <div>
+        <label>Nationality: </label>
+        <input type='text' name='nationality'>
+    </div>
+    <div>
+        <label>IDnumber: </label>
+        <input type='text' name='id_number'>
+    </div>
+    <div>
+        <label>Place of residence: </label>
+        <input type='text' name='place_of_residence'>
+    </div>
+    <div>
+        <label>Workplace: </label>
+        <input type='text' name='workplace' id="workplace">
+    </div>
+    <div>
+        <label>Blood Type: </label>
+        <input type='text' name='blood_type' id="blood_type">
+    </div>
+    <div>
+        <label>Name of sponsor: </label>
+        <input type='text' name='Name_of_sponsor'>
+    </div>
+    <div>
+        <input type='submit' value='Save'>
+    </div>
+</form>
+{{end}}

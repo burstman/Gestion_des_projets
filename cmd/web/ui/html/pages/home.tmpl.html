@@ -1,0 +1,39 @@
+{{define "title"}}Home{{end}}
+
+{{define "main"}}
+
+<h2>Home page</h2>
+
+{{if .WorkersRegistry}}
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Created</th>
+        <th>Name</th>
+        <th>Nationality</th>
+        <th>ID number</th>
+        <th>Place Of Residence</th>
+        <th>Workplace</th>
+        <th>BloodType</th>
+        <th>Name Of Sponsor</th>
+    </tr>
+    {{range .WorkersRegistry}}
+    <tr>
+        <td>#{{.ID}}</td>
+        <td>{{.CreatedAt}}</td>
+        <td>{{.Name}}</td>
+        <td>{{.Nationality}}</td>
+        <td>{{.IDnumber}}</td>
+        <td>{{.PlaceOfResidence}}</td>
+        <td>{{.Workplace}}</td>
+        <td>{{.BloodType}}</td>
+        <td>{{.NameOfSponsor}}</td>
+    </tr>
+    {{end}}
+</table>
+{{else}}
+<p>There's nothing to see here... yet!</p>
+{{end}}
+
+
+{{end}}

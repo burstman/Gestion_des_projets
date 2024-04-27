@@ -1,0 +1,22 @@
+{{define "title"}}Login{{end}}
+{{define "main"}}
+
+<h2>User Login</h2>
+<form action="/user/login" method="post" novalidate>
+
+    <div>
+        <label>email:</label>
+
+        <input type='text' name='email'>
+
+    </div>
+    <div>
+        <label>Password:</label>
+
+        <input type='password' name='password'>
+    </div>
+    <div>
+        <input type="submit" value="Login">
+    </div>
+</form>
+{{end}}

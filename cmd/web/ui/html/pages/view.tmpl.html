@@ -1,0 +1,27 @@
+{{define "title"}}Regiter #{{.WorkerRegistry.ID}}{{end}}
+
+{{define "main"}}
+{{with .WorkerRegistry}}
+<div class="personne">
+    <div class="metadata">
+        <strong>Name: {{.Name}}</strong>
+        <!--<span>{{.ID}}</span> -->
+    </div>
+    <div class="metadata">
+        <strong>Nationality: {{.Nationality}}</strong>
+    </div>
+    <div class="metadata">
+        <strong>PlaceOfResidence: {{.PlaceOfResidence}}</strong>
+    </div>
+    <div class="metadata">
+        <strong>Workplace: {{.Workplace}}</strong>
+    </div>
+    <div class="metadata">
+        <strong>BloodType: {{.BloodType}}</strong>
+    </div>
+    <div class="metadata">
+        <strong>CreatedAt: {{.CreatedAt}}</strong>
+    </div>
+</div>
+{{end}}
+{{end}}

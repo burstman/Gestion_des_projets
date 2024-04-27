@@ -1,0 +1,59 @@
+{{define "nav"}}
+<nav id="site-navigation" class="site-navigation" aria-label="Clickable Menu Demonstration">
+	<ul class="main-menu clicky-menu no-js">
+		<li>
+			<a href="/">Home</a>
+		</li>
+		<li>
+			
+			<a href="/registry/create">New register</a>
+			
+		</li>
+		<li>
+				
+			<a href="/user/signup">
+				Register Account
+				<svg aria-hidden="true" width="16" height="16">
+					<use xlink:href="#arrow" />
+				</svg>
+			</a>
+			
+		</li>
+		<li>
+			
+			<a href="/user/login">
+				Login Account
+				<svg aria-hidden="true" width="16" height="16">
+					<use xlink:href="#arrow" />
+				</svg>
+			</a>
+			
+		</li>
+		<li>
+			
+			<a href="/user/logout">
+				LogOut
+				<svg aria-hidden="true" width="16" height="16">
+					<use xlink:href="#arrow" />
+				</svg>
+			</a>
+			
+			
+		</li>
+		<li>
+			<a href="/about">
+				About
+				<svg aria-hidden="true" width="16" height="16">
+					<use xlink:href="#arrow" />
+				</svg>
+			</a>
+			<ul>
+				<li><a href="#">Mission</a></li>
+				<li><a href="#">History</a></li>
+				<li><a href="#">Contact</a></li>
+			</ul>
+		</li>
+	</ul>
+</nav>
+
+{{end}}
