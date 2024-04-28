@@ -54,7 +54,7 @@ func (r *UserData) Register(u UserAuth) (int, error) {
 	return id, nil
 }
 
-func (r *UserData) Athentificate(email,password string) (int, error) {
+func (r *UserData) Athentificate(email, password string) (int, error) {
 	var id int
 	var hashedPassword []byte
 	query := `SELECT id, password from authentification where email=$1`
@@ -66,12 +66,22 @@ func (r *UserData) Athentificate(email,password string) (int, error) {
 		return 0, err
 	}
 
-	err= bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return 0, ErrInvalidCredentials	
-		}	
+			return 0, ErrInvalidCredentials
+		}
 		return 0, err
 	}
 	return id, nil
+}
+
+func (u *UserData) Exists(id int) (bool, error) {
+	var exists bool
+
+	stmt := `SELECT EXISTS(SELECT 1 FROM authentification WHERE id=$1)`
+
+	err := u.DB.QueryRow(stmt, id).Scan(&exists)
+
+	return exists, err
 }

@@ -40,7 +40,7 @@ var cfg config
 
 type application struct {
 	registry        *data.RegistryData
-	userLoginSignup *data.UserData
+	userData        *data.UserData
 	errlog, infolog *log.Logger
 	templateCache   map[string]*template.Template
 	sessionManager  *scs.SessionManager
@@ -58,7 +58,7 @@ func main() {
 	//flags
 	flag.StringVar(&cfg.addr, "addr", os.Getenv("REGISTRY_ADDR"), "HTTP Network Addess")
 	flag.StringVar(&cfg.staticDir, "static-dir", os.Getenv("REGISTRY_STATIC_DIR"), "Path to static asset")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("DSN_GESTION_PROJET"), "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("DSN_BASE_REGISTRY"), "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
@@ -75,13 +75,13 @@ func main() {
 
 	formDecoder := form.NewDecoder()
 	app := &application{
-		registry:        &data.RegistryData{DB: db},
-		userLoginSignup: &data.UserData{DB: db},
-		errlog:          errlog,
-		infolog:         infolog,
-		templateCache:   templateCache,
-		sessionManager:  sessionManager,
-		formDecoder:     formDecoder,
+		registry:       &data.RegistryData{DB: db},
+		userData:       &data.UserData{DB: db},
+		errlog:         errlog,
+		infolog:        infolog,
+		templateCache:  templateCache,
+		sessionManager: sessionManager,
+		formDecoder:    formDecoder,
 	}
 
 	defer db.Close()

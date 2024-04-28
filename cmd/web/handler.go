@@ -26,6 +26,8 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	data := &templateData{
 		WorkersRegistry: lastList,
+		IsAuthenticated: app.isAuthenticated(r),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 	}
 
 	app.render(w, "home.tmpl.html", http.StatusOK, data)
@@ -45,7 +47,6 @@ func (app *application) addNewDataRegistryDisplay(w http.ResponseWriter, r *http
 	data := app.newTemplateData(r)
 	app.render(w, "createNew.tmpl.html", http.StatusOK, data)
 }
-
 
 // dataRegistryForm represents a form for submitting data to a registry.
 // It contains fields for the ID number, name, name of sponsor, place of residence,
@@ -137,14 +138,20 @@ func (app *application) getRegistryId(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
-	// err := app.sessionManager.RenewToken(r.Context())
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// }
-	// app.sessionManager.Remove(r.Context(), "authenticatedUserID")
-	// app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
+	// Check if the user is logged in.
+	if !app.sessionManager.Exists(r.Context(), "authenticatedUserID") {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	err := app.sessionManager.RenewToken(r.Context())
+	if err != nil {
+		app.serverError(w, err)
+	}
+	app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+	app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
 	// Redirect the user to the application home page.
-	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 
 }
 
@@ -165,6 +172,7 @@ func (app *application) getLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) postLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("test")
 	var form userLoginForm
 	fmt.Println(form)
 	err := app.decodePostForm(r, &form)
@@ -173,7 +181,7 @@ func (app *application) postLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := app.userLoginSignup.Athentificate(form.Email, form.Password)
+	id, err := app.userData.Athentificate(form.Email, form.Password)
 	if err != nil {
 		if errors.Is(err, data.ErrInvalidCredentials) {
 			app.sessionManager.Put(r.Context(), "flash", "Invalid credentials")
@@ -193,7 +201,16 @@ func (app *application) postLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	//Add ID to the session Manager
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
-	println("authen ", app.isAuthenticated(r))
+
+	// Use the PopString method to retrieve and remove a value from the session
+	// data in one step. If no matching key exists this will return the empty
+	// string.
+	path := app.sessionManager.PopString(r.Context(), "redirectPathAfterLogin")
+	if path != "" {
+		http.Redirect(w, r, path, http.StatusSeeOther)
+		return
+	}
+	app.sessionManager.Put(r.Context(), "flash", "Login successfull")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 
 }
@@ -213,7 +230,7 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	_, err = app.userLoginSignup.Register(data.UserAuth{
+	_, err = app.userData.Register(data.UserAuth{
 		Name:     form.Name,
 		Email:    form.Email,
 		Password: form.Password,

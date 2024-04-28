@@ -1,6 +1,7 @@
 {{define "title"}}Regiter #{{.WorkerRegistry.ID}}{{end}}
 
 {{define "main"}}
+{{if .IsAuthenticated}}
 {{with .WorkerRegistry}}
 <div class="personne">
     <div class="metadata">
@@ -23,5 +24,6 @@
         <strong>CreatedAt: {{.CreatedAt}}</strong>
     </div>
 </div>
+{{end}}
 {{end}}
 {{end}}

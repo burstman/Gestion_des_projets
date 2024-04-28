@@ -5,39 +5,36 @@
 			<a href="/">Home</a>
 		</li>
 		<li>
-			
-			<a href="/registry/create">New register</a>
-			
+			{{if .IsAuthenticated}}
+			<a href="/registry/create">Add New Data registery</a>
+			{{end}}
 		</li>
 		<li>
-				
+			{{if not .IsAuthenticated}}
 			<a href="/user/signup">
-				Register Account
+				Signup Account
 				<svg aria-hidden="true" width="16" height="16">
 					<use xlink:href="#arrow" />
 				</svg>
 			</a>
-			
+			{{end}}
 		</li>
 		<li>
-			
+			{{if not .IsAuthenticated}}
 			<a href="/user/login">
 				Login Account
 				<svg aria-hidden="true" width="16" height="16">
 					<use xlink:href="#arrow" />
 				</svg>
 			</a>
-			
+			{{end}}
 		</li>
 		<li>
-			
-			<a href="/user/logout">
-				LogOut
-				<svg aria-hidden="true" width="16" height="16">
-					<use xlink:href="#arrow" />
-				</svg>
-			</a>
-			
+			{{if .IsAuthenticated}} 
+			<form action="/user/logout" method="POST">
+				<button type="submit">Logout</button>
+			  </form>
+			{{end}} 
 			
 		</li>
 		<li>

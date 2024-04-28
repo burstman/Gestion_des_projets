@@ -3,7 +3,7 @@
 {{define "main"}}
 
 <h2>Home page</h2>
-
+{{if .IsAuthenticated}}
 {{if .WorkersRegistry}}
 <table>
     <tr>
@@ -35,5 +35,5 @@
 <p>There's nothing to see here... yet!</p>
 {{end}}
 
-
+{{end}}
 {{end}}

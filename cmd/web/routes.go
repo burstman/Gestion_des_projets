@@ -19,7 +19,7 @@ func (app *application) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 	//handler for session Manager
-	dynamic := alice.New(app.sessionManager.LoadAndSave)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, app.authenticated)
 	//Handlers
 	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(app.getSignUp))
 	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(app.postSignUp))
@@ -31,7 +31,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/registry/view/:id", protected.ThenFunc(app.getRegistryId))
 	router.Handler(http.MethodGet, "/registry/create", protected.ThenFunc(app.addNewDataRegistryDisplay))
 	router.Handler(http.MethodPost, "/registry/create", protected.ThenFunc(app.addNewDataRegistry))
-	router.Handler(http.MethodGet, "/user/logout", protected.ThenFunc(app.logoutPost))
+	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.logoutPost))
 
 	standard := alice.New(app.recoverPanic, app.applogRequest, secureHeaders)
 
