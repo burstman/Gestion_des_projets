@@ -172,7 +172,7 @@ func (app *application) getLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) postLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("test")
+	// Check if the user is logged in.
 	var form userLoginForm
 	fmt.Println(form)
 	err := app.decodePostForm(r, &form)
@@ -256,4 +256,16 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) {
 	app.sessionManager.Put(r.Context(), "flash", "Account created successfully!")
 
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+}
+
+func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
+	id := 1
+	message := "I 'm hungry"
+	url := "http://localhost:8000/send_data"
+
+	err := app.sendRecive.SendReceive(id, message, url)
+
+	if err != nil {
+		app.serverError(w, err)
+	}
 }

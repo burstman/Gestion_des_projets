@@ -14,6 +14,7 @@ import (
 	// add aliases texternao pacakges (internal / external )
 
 	// internal pacakges
+	chatapi "github.com/burstman/baseRegistry/cmd/web/internal/chatApi"
 	"github.com/burstman/baseRegistry/cmd/web/internal/data"
 	"github.com/go-playground/form/v4"
 
@@ -45,6 +46,7 @@ type application struct {
 	templateCache   map[string]*template.Template
 	sessionManager  *scs.SessionManager
 	formDecoder     *form.Decoder
+	sendRecive      chatapi.SenderReceiver
 }
 
 func main() {
@@ -74,6 +76,9 @@ func main() {
 	sessionManager.Cookie.Secure = true //important
 
 	formDecoder := form.NewDecoder()
+
+	chat := chatapi.NewSenderReceive()
+
 	app := &application{
 		registry:       &data.RegistryData{DB: db},
 		userData:       &data.UserData{DB: db},
@@ -82,6 +87,7 @@ func main() {
 		templateCache:  templateCache,
 		sessionManager: sessionManager,
 		formDecoder:    formDecoder,
+		sendRecive:     chat,
 	}
 
 	defer db.Close()

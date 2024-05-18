@@ -26,6 +26,7 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(app.getLogin))
 	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(app.postLogin))
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
+	router.Handler(http.MethodPost, "/send_message", dynamic.ThenFunc(app.chatMessage))
 
 	protected := dynamic.Append(app.requierAuthentification)
 	router.Handler(http.MethodGet, "/registry/view/:id", protected.ThenFunc(app.getRegistryId))
