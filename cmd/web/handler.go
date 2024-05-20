@@ -263,7 +263,7 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) {
 // and passes them to the SendReceive function to handle the message sending.
 // If an error occurs, it is logged and a server error response is returned.
 func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
-	message := "I want two  pizza"
+	message := "I want two big pizza"
 	url := "http://localhost:8000/send_data"
 	userID := 1
 	chatBotResponse, err := app.sendRecive.SendReceive(userID, message, url)
@@ -279,7 +279,10 @@ func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 			app.serverError(w, err)
 			return
 		}
-		fmt.Println(chatOrder)
+
+		fmt.Println("the product is :", chatOrder.Product)
+		fmt.Println("the quantity is :", chatOrder.Qty)
+		fmt.Println("the type is :", chatOrder.Newtype)
 	} else {
 		fmt.Println(chatBotResponse.Message)
 	}
