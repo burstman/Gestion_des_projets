@@ -14,14 +14,14 @@ type Message struct {
 }
 
 type SenderReceiver interface {
-	SendReceive(id int, message, url string) error
+	SendReceive(id int, message, url string) (*Message, error)
 }
 
 func NewSenderReceive() SenderReceiver {
 	return &Message{}
 }
 
-func (m *Message) SendReceive(Id int, data, url string) error {
+func (m *Message) SendReceive(Id int, data, url string) (*Message, error) {
 	m = &Message{
 		Id:      Id,
 		Message: data,
@@ -32,30 +32,30 @@ func (m *Message) SendReceive(Id int, data, url string) error {
 	fmt.Println(string(jsonPayload))
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req, err := http.NewRequest(http.MethodPost, m.Url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to send Api chatbot message: %s", resp.Status)
+		return nil, fmt.Errorf("failed to send Api chatbot message: %s", resp.Status)
 	}
 	var receivedMessage Message
 	err = json.NewDecoder(resp.Body).Decode(&receivedMessage)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
-	fmt.Println(receivedMessage)
+	//fmt.Println(receivedMessage)
 
-	return nil
+	return &receivedMessage, nil
 }

@@ -42,6 +42,7 @@ var cfg config
 type application struct {
 	registry        *data.RegistryData
 	userData        *data.UserData
+	chatData        *data.ChatData
 	errlog, infolog *log.Logger
 	templateCache   map[string]*template.Template
 	sessionManager  *scs.SessionManager
@@ -82,6 +83,7 @@ func main() {
 	app := &application{
 		registry:       &data.RegistryData{DB: db},
 		userData:       &data.UserData{DB: db},
+		chatData:       &data.ChatData{DB: db},
 		errlog:         errlog,
 		infolog:        infolog,
 		templateCache:  templateCache,
@@ -108,7 +110,6 @@ func main() {
 
 // put it into seperate package (maybe?)
 func openDB(cfg config) (*sql.DB, error) {
-	//connStr := "postgresql://hamedflissi:4UcxmGXhp1lH@ep-tiny-wave-a2nuke2k.eu-central-1.aws.neon.tech/Gestion_des_Projets?sslmode=require"
 	db, err := sql.Open("postgres", cfg.db.dsn)
 	if err != nil {
 		return nil, err

@@ -258,14 +258,29 @@ func (app *application) postSignUp(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
+// chatMessage handles an HTTP request to send a chat message.
+// It takes the message ID, message text, and URL to send the data to,
+// and passes them to the SendReceive function to handle the message sending.
+// If an error occurs, it is logged and a server error response is returned.
 func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
-	id := 1
-	message := "I 'm hungry"
+	message := "I want two  pizza"
 	url := "http://localhost:8000/send_data"
-
-	err := app.sendRecive.SendReceive(id, message, url)
+	userID := 1
+	chatBotResponse, err := app.sendRecive.SendReceive(userID, message, url)
+	fmt.Println(chatBotResponse)
 
 	if err != nil {
 		app.serverError(w, err)
+		return
+	}
+	if chatBotResponse.Id != 0 {
+		chatOrder, err := app.chatData.RetrieveUserOrder(chatBotResponse.Id)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		fmt.Println(chatOrder)
+	} else {
+		fmt.Println(chatBotResponse.Message)
 	}
 }
