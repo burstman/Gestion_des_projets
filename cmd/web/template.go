@@ -4,7 +4,6 @@ import (
 	"html/template"
 	"io/fs"
 	"path/filepath"
-	"time"
 
 	"github.com/burstman/baseRegistry/cmd/web/internal/data"
 	"github.com/burstman/baseRegistry/cmd/web/ui"
@@ -20,24 +19,30 @@ import (
 // Flash is a string that likely represents a temporary message or notification to
 // be displayed to the user.
 
+type Comment struct {
+	Author string
+	Text   string
+}
+
 type Task struct {
 	ID          int
 	Description string
 	AssignedTo  string
 	Status      string
-	DueDate     time.Time
+	DueDate     string
+	Comments    []Comment
 }
 
-type Projects struct {
+type Project struct {
 	Name         string
 	Description  string
 	Status       string
-	Deadline     time.Time
-	CompleatedAt time.Time
+	Deadline     string
+	CompleatedAt string
 	Comment      map[string]string
-	Owner        string
-	Participants map[string]string
-	Tasks        []*Task
+	User         string
+	//Participants map[string]string
+	Tasks []*Task
 }
 
 type ChatHistory struct {
@@ -46,9 +51,8 @@ type ChatHistory struct {
 	ChatMessage string
 }
 
-
 type templateData struct {
-	Projects        []*Projects
+	Projects        []*Project
 	ChatHistories   []*ChatHistory
 	User            *data.User
 	Form            any

@@ -228,36 +228,6 @@ type userChatForm struct {
 	Message string `form:"message"`
 }
 
-// func (app *application) AddNewChatMessage(w http.ResponseWriter, r *http.Request) {
-// 	data := app.newTemplateData(r)
-// 	form := userChatForm{}
-// 	params := httprouter.ParamsFromContext(r.Context())
-
-// 	id, err := strconv.Atoi(params.ByName("id"))
-// 	if err != nil || id < 1 {
-// 		app.notFound(w)
-// 		return
-// 	}
-// 	err = app.decodePostForm(r, &form)
-// 	if err != nil {
-// 		app.clientError(w, http.StatusUnprocessableEntity)
-// 		return
-// 	}
-// 	user, err := app.userData.Get(id)
-// 	if err != nil {
-// 		app.serverError(w, err)
-// 		return
-// 	}
-// 	fmt.Println(form)
-
-// 	data.ChatHistories = append(data.ChatHistories, &ChatHistory{Message: form.Message, User: user.Name})
-// 	http.Redirect(w, r, fmt.Sprintf("/tasks/view/%d", id), http.StatusSeeOther)
-// }
-
-// chatMessage handles an HTTP request to send a chat message.
-// It takes the message ID, message text, and URL to send the data to,
-// and passes them to the SendReceive function to handle the message sending.
-// If an error occurs, it is logged and a server error response is returned.
 func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 
 	var form userChatForm
@@ -304,12 +274,9 @@ func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 		ChatTime:    time.Now().Format("15:04")})
 	fmt.Println(len(chatHistories))
 	app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
-	if chatOrder.Intent=="create"{
-		
-	}
+	// if chatOrder.Intent == "create" {
 
-
-
+	// }
 
 	http.Redirect(w, r, fmt.Sprintf("/tasks/view/%d", id), http.StatusSeeOther)
 }
@@ -339,47 +306,73 @@ func (app *application) userTasksView(w http.ResponseWriter, r *http.Request) {
 	}
 	data := app.newTemplateData(r)
 	data.User = user
-	task1 := Task{ID: 1, Description: "Implement feature A", AssignedTo: "Alice", DueDate: time.Date(2024, 6, 5, 0, 0, 0, 0, time.UTC), Status: "Open"}
-	task2 := Task{ID: 2, Description: "Fix bug in module X", AssignedTo: "Bob", DueDate: time.Date(2024, 6, 10, 0, 0, 0, 0, time.UTC), Status: "Closed"}
-	task3 := Task{ID: 3, Description: "Write documentation", AssignedTo: "Charlie", DueDate: time.Date(2024, 6, 15, 0, 0, 0, 0, time.UTC), Status: "Open"}
-
-	// Create some example projects
-
-	project1 := Projects{
-		Name:         "Project 1",
-		Description:  "This is project 1",
-		Status:       "In Progress",
-		Deadline:     time.Date(2024, 6, 20, 0, 0, 0, 0, time.UTC),
-		Owner:        "Alice",
-		Participants: map[string]string{"Alice": "Manager", "Bob": "Developer"},
-		Tasks:        []*Task{&task1, &task2},
+	projects := []*Project{
+		{
+			Name:        "Project Alpha",
+			Description: "First project",
+			Status:      "In Progress",
+			Deadline:    "2024-06-25",
+			Comment:     map[string]string{"Initial setup": "Completed", "Review": "Pending"},
+			User:        "John Doe",
+			Tasks: []*Task{
+				{
+					ID:          1,
+					Description: "Setup project repository",
+					AssignedTo:  "Alice",
+					Status:      "Completed",
+					DueDate:     "2024-06-25",
+					Comments: []Comment{
+						{Author: "Alice", Text: "Repository created."},
+						{Author: "John", Text: "Reviewed and approved."},
+					},
+				},
+				{
+					ID:          2,
+					Description: "Initial project setup",
+					AssignedTo:  "Bob",
+					Status:      "In Progress",
+					DueDate:     "2024-06-28",
+					Comments: []Comment{
+						{Author: "Bob", Text: "Working on the setup."},
+					},
+				},
+			},
+		},
+		{
+			Name:         "Project Beta",
+			Description:  "Second project",
+			Status:       "Completed",
+			Deadline:     time.Date(2024, time.July, 0, 0, 0, 0, 0, time.UTC).Format("25-06-2015"),
+			CompleatedAt: time.Date(2024, time.July, 10, 0, 0, 0, 0, time.UTC).Format("25-06-2015"),
+			Comment:      map[string]string{"Final presentation": "Completed"},
+			User:         "Jane Smith",
+			Tasks: []*Task{
+				{
+					ID:          3,
+					Description: "Create project plan",
+					AssignedTo:  "Charlie",
+					Status:      "Completed",
+					DueDate:     "2024-07-05",
+					Comments: []Comment{
+						{Author: "Charlie", Text: "Project plan created."},
+					},
+				},
+				{
+					ID:          4,
+					Description: "Conduct team meeting",
+					AssignedTo:  "Dave",
+					Status:      "Completed",
+					DueDate:     "2024-07-08",
+					Comments: []Comment{
+						{Author: "Dave", Text: "Team meeting held."},
+						{Author: "Jane", Text: "Meeting notes shared."},
+					},
+				},
+			},
+		},
 	}
 
-	project2 := Projects{
-		Name:         "Project 2",
-		Description:  "This is project 2",
-		Status:       "Planned",
-		Deadline:     time.Date(2024, 7, 1, 0, 0, 0, 0, time.UTC),
-		Owner:        "Bob",
-		Participants: map[string]string{"Bob": "Manager", "Charlie": "Developer"},
-		Tasks:        []*Task{&task3},
-	}
-
-	// Add a task to project 1
-	newTask := Task{ID: 4, Description: "Refactor code", AssignedTo: "Alice", DueDate: time.Date(2024, 6, 25, 0, 0, 0, 0, time.UTC), Status: "Open"}
-	project1.Tasks = append(project1.Tasks, &newTask)
-	data.Projects = []*Projects{&project1, &project2}
-
-	chatHistoriesInterface := app.sessionManager.Get(r.Context(), "chatMessage")
-	chatHistories, ok := chatHistoriesInterface.([]*ChatHistory)
-	if !ok {
-		app.serverError(w, fmt.Errorf("failed to convert chatHistories Interface to []*ChatHistory"))
-		return
-	}
-
-	if len(chatHistories) > 0 {
-		data.ChatHistories = chatHistories
-	}
+	data.Projects = projects
 
 	app.render(w, "tasks.tmpl.html", http.StatusOK, data)
 }
