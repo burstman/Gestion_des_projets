@@ -270,12 +270,18 @@ func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(chatOrder)
 	chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
-		ChatMessage: fmt.Sprintf("%s : %s : %s : %s", chatOrder.Intent, chatOrder.Task, chatOrder.Types, chatOrder.User_name),
-		ChatTime:    time.Now().Format("15:04")})
+		ChatMessage: fmt.Sprintf("%s : %s : %s : %s : %s", chatOrder.Intent, chatOrder.Task,
+			chatOrder.Types, chatOrder.User_name, chatBotResponse.Message),
+		ChatTime: time.Now().Format("15:04")})
 	fmt.Println(len(chatHistories))
 	app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
-	// if chatOrder.Intent == "create" {
 
+	// if chatOrder.Intent == "create" && len(chatOrder.Task) != 0 {
+	// 	err := app.insert(chatOrder.Task)
+	// 	if err != nil {
+	// 		app.serverError(w, err)
+	// 		return
+	// 	}
 	// }
 
 	http.Redirect(w, r, fmt.Sprintf("/tasks/view/%d", id), http.StatusSeeOther)
