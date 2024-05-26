@@ -14,18 +14,18 @@ type Message struct {
 }
 
 type SenderReceiver interface {
-	SendReceive(id int, message, url string) (*Message, error)
+	SendReceive(id int, message string) (*Message, error)
 }
 
-func NewSenderReceive() SenderReceiver {
-	return &Message{}
+func NewSenderReceive(Url string) SenderReceiver {
+	return &Message{Url: Url}
 }
 
-func (m *Message) SendReceive(Id int, data, url string) (*Message, error) {
+func (m *Message) SendReceive(Id int, data string) (*Message, error) {
 	m = &Message{
 		Id:      Id,
 		Message: data,
-		Url:     url,
+		Url:     m.Url,
 	}
 	jsonPayload, err := json.Marshal(m)
 

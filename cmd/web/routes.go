@@ -26,13 +26,13 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(app.postSignUp))
 	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(app.getLogin))
 	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(app.postLogin))
-	router.Handler(http.MethodPost, "/user/sendMessage", dynamic.ThenFunc(app.chatMessage))
-
+	router.Handler(http.MethodPost, "/user/sendmessage", dynamic.ThenFunc(app.chatMessage))
+	router.Handler(http.MethodGet, "/tasks/view/:id", dynamic.ThenFunc(app.userTasksView))
 	protected := dynamic.Append(app.requierAuthentification)
-	router.Handler(http.MethodGet, "/registry/view/:id", protected.ThenFunc(app.getRegistryId))
-	router.Handler(http.MethodGet, "/registry/create", protected.ThenFunc(app.addNewDataRegistryDisplay))
+
+	//router.Handler(http.MethodPost, "/user/message", protected.ThenFunc(app.AddNewChatMessage))
 	router.Handler(http.MethodPost, "/registry/create", protected.ThenFunc(app.addNewDataRegistry))
-	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.logoutPost))
+	//router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.logoutPost))
 
 	standard := alice.New(app.recoverPanic, app.applogRequest, secureHeaders)
 

@@ -1,0 +1,118 @@
+{{define "title"}}View{{end}}
+
+{{define "main"}}
+<div class="page">
+  <div class="pageHeader">
+    <div class="title">Dashboard</div>
+    <div class="userPanel"><i class="fa fa-chevron-down"></i><span class="username"> {{.User.Name}}</span></div>
+  </div>
+  <div class="main">
+    <div class="view">
+      <div class="viewHeader">
+        <div class="title">Manage Tasks</div>
+        <div class="functions">
+          <div class="button active">Add New Task</div>
+          <div class="button">Completed</div>
+          <div class="button inverz"><i class="fa fa-trash-o"></i></div>
+        </div>
+      </div>
+      <div class="content">
+        {{range .Projects}}
+        <div class="list">
+          <div class="title">{{.Deadline}}</div>
+          <ul>
+            <li class="checked"><i class="fa fa-check-square-o"></i><span>Project: {{.Name}}</span>
+              <div class="info">
+                <div class="button green">{{.Status}}</div><span>Complete by {{.Deadline}}</span>
+              </div>
+            </li>
+            {{range .Tasks}}
+            <li><i class="fa fa-square-o"></i><span>{{.Description}}</span>
+              <div class="info">
+                <div class="button">{{.Status}}</div><span>Complete by {{.DueDate}}</span>
+              </div>
+            </li>
+            {{end}}
+          </ul>
+        </div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{end}}
+{{define "chat"}}
+<!doctype html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+  <title>Live Chat</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Sans:400,700">
+
+</head>
+
+<body>
+
+  <div id="live-chat">
+
+    <header class="clearfix">
+
+      <h4>{{.User.Name}}</h4>
+
+      <span class="chat-message-counter">3</span>
+
+    </header>
+
+    <div class="chat">
+
+      <div class="chat-history">
+        <div class="chat">
+
+          <div class="chat-history">
+            
+            {{range .ChatHistories}}
+            <div class="chat-message clearfix">
+
+              <div class="chat-message-content clearfix">
+
+                <span class="chat-time">{{.ChatTime}}</span>
+
+                <h5>{{.ChatUser}}</h5>
+
+                <p>{{.ChatMessage}}</p>
+
+              </div> <!-- end chat-message-content -->
+
+            </div> <!-- end chat-message -->
+
+            <hr>
+            {{end}}
+
+
+
+            <form action="/user/sendmessage" method="post">
+
+             
+
+                <input type="text" name="message" autofocus>
+                <input type="submit" value="Send">
+
+
+            </form>
+
+          </div> <!-- end chat -->
+
+        </div> <!-- end live-chat -->
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</body>
+
+</html>
+{{end}}

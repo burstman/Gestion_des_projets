@@ -1,0 +1,119 @@
+/* General Styles */
+body {
+	font-family: 'Open Sans', sans-serif;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	height: 100vh;
+  }
+  
+  /* Chat Widget Styles */
+  #live-chat {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	width: 300px;
+	max-height: 500px;
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 10px;
+	overflow: hidden;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: column;
+  }
+  
+  /* Header Styles */
+  #live-chat header {
+	background: #007bff;
+	color: white;
+	padding: 10px;
+	border-bottom: 1px solid #007bff;
+	position: relative;
+  }
+  
+  #live-chat header h4 {
+	margin: 0;
+	font-size: 16px;
+  }
+  
+  #live-chat .chat-message-counter {
+	background: red;
+	border-radius: 50%;
+	padding: 5px 10px;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	color: white;
+	font-size: 12px;
+  }
+  
+  /* Chat History Styles */
+  .chat-history {
+	flex: 1;
+	padding: 10px;
+	overflow-y: auto;
+  }
+  
+  .chat-message {
+	display: flex;
+	align-items: flex-start;
+	margin-bottom: 10px;
+  }
+  
+  .chat-message .chat-message-content {
+	padding: 10px;
+	background: #f1f1f1;
+	border-radius: 5px;
+	margin-left: 10px;
+	flex: 1;
+	position: relative;
+  }
+  
+  .chat-message .chat-message-content h5 {
+	margin: 0 0 5px;
+	font-size: 14px;
+	color: #333;
+  }
+  
+  .chat-message .chat-message-content p {
+	margin: 0;
+	font-size: 13px;
+  }
+  
+  .chat-message .chat-time {
+	font-size: 12px;
+	color: #888;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+  }
+  
+  /* Input Form Styles */
+  form {
+	display: flex;
+	border-top: 1px solid #ccc;
+  }
+  
+  form input[type="text"] {
+	flex: 1;
+	padding: 10px;
+	border: none;
+	border-radius: 0 0 0 10px;
+	outline: none;
+  }
+  
+  form input[type="submit"] {
+	background: #007bff;
+	color: white;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 0 0 10px 0;
+	cursor: pointer;
+  }
+  
+  form input[type="submit"]:hover {
+	background: #0056b3;
+  }
+  

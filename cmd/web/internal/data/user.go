@@ -8,30 +8,50 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// UserAuth is a struct that holds the necessary information for registering a new authentication record.
+// User is a struct that holds the necessary information for registering a new authentication record.
 // It contains the name, email, and password of the user being registered.
-type UserAuth struct {
+type User struct {
+	Id       int
 	Name     string
 	Email    string
 	Password string
 }
 
-type UserData struct {
+type UserDB struct {
 	DB *sql.DB
+}
+
+func (r *UserDB) Get(id int) (*User, error) {
+	stmt := `SELECT username, email FROM users WHERE user_id=$1`
+	user := &User{}
+
+	err := r.DB.QueryRow(stmt, id).Scan(
+		&user.Name,
+		&user.Email,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	return user, nil
 }
 
 // Register adds a new authentication record to the database. If a record with the
 // same name or email already exists, it returns ErrDuplicateName or ErrDuplicateEmail.
-func (r *UserData) Register(u UserAuth) (int, error) {
+func (r *UserDB) Register(u User) (int, error) {
 	// Create a bcrypt hash of the plain-text password.
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), 12)
 	if err != nil {
 		return 0, err
 	}
 	query := `
-	INSERT INTO authentification (name, email, password)
+	INSERT INTO users (username, email, password_hash)
 	VALUES ($1, $2, $3)
-	RETURNING id`
+	RETURNING user_id`
 	args := []interface{}{
 		u.Name,
 		u.Email,
@@ -54,11 +74,11 @@ func (r *UserData) Register(u UserAuth) (int, error) {
 	return id, nil
 }
 
-func (r *UserData) Athentificate(email, password string) (int, error) {
+func (r *UserDB) Athentificate(username, password string) (int, error) {
 	var id int
 	var hashedPassword []byte
-	query := `SELECT id, password from authentification where email=$1`
-	err := r.DB.QueryRow(query, email).Scan(&id, &hashedPassword)
+	query := `SELECT user_id, password_hash from users where username=$1`
+	err := r.DB.QueryRow(query, username).Scan(&id, &hashedPassword)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, ErrInvalidCredentials
@@ -76,10 +96,10 @@ func (r *UserData) Athentificate(email, password string) (int, error) {
 	return id, nil
 }
 
-func (u *UserData) Exists(id int) (bool, error) {
+func (u *UserDB) Exists(id int) (bool, error) {
 	var exists bool
 
-	stmt := `SELECT EXISTS(SELECT 1 FROM authentification WHERE id=$1)`
+	stmt := `SELECT EXISTS(SELECT 1 FROM users WHERE user_id=$1)`
 
 	err := u.DB.QueryRow(stmt, id).Scan(&exists)
 

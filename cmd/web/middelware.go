@@ -15,7 +15,11 @@ func (app *application) applogRequest(next http.Handler) http.Handler {
 func secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Security-Policy",
-			"default-src 'self'; style-src 'self' https://cdnjs.cloudflare.com; font-src fonts.gstatic.com")
+			"default-src 'self' https://s3.amazonaws.com https://gravatar.com http://lorempixum.com http://www.ultraimg.com; " +
+			"style-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://netdna.bootstrapcdn.com; " +
+			"font-src 'self' https://fonts.gstatic.com https://netdna.bootstrapcdn.com; " +
+			"script-src 'self' https://code.jquery.com 'unsafe-inline'; " +
+			"img-src 'self' data: https://s3.amazonaws.com https://gravatar.com http://lorempixum.com http://www.ultraimg.com")
 		w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "deny")

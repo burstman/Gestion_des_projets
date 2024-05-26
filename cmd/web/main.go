@@ -4,6 +4,7 @@ import (
 	// go built-in packages
 	"context"
 	"database/sql"
+	"encoding/gob"
 	"flag"
 	"html/template"
 	"log"
@@ -14,7 +15,7 @@ import (
 	// add aliases texternao pacakges (internal / external )
 
 	// internal pacakges
-	chatapi "github.com/burstman/baseRegistry/cmd/web/internal/chatApi"
+	chatApi "github.com/burstman/baseRegistry/cmd/web/internal/chatApi"
 	"github.com/burstman/baseRegistry/cmd/web/internal/data"
 	"github.com/go-playground/form/v4"
 
@@ -41,13 +42,17 @@ var cfg config
 
 type application struct {
 	registry        *data.RegistryData
-	userData        *data.UserData
+	userData        *data.UserDB
 	chatData        *data.ChatData
 	errlog, infolog *log.Logger
 	templateCache   map[string]*template.Template
 	sessionManager  *scs.SessionManager
 	formDecoder     *form.Decoder
-	sendRecive      chatapi.SenderReceiver
+	sendRecive      chatApi.SenderReceiver
+}
+
+func init() {
+	gob.Register([]*ChatHistory{})
 }
 
 func main() {
@@ -61,7 +66,7 @@ func main() {
 	//flags
 	flag.StringVar(&cfg.addr, "addr", os.Getenv("REGISTRY_ADDR"), "HTTP Network Addess")
 	flag.StringVar(&cfg.staticDir, "static-dir", os.Getenv("REGISTRY_STATIC_DIR"), "Path to static asset")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("DSN_BASE_REGISTRY"), "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("DSN_PROJECT_Management"), "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
@@ -78,11 +83,11 @@ func main() {
 
 	formDecoder := form.NewDecoder()
 
-	chat := chatapi.NewSenderReceive()
+	chat := chatApi.NewSenderReceive("http://localhost:8000/send_data")
 
 	app := &application{
 		registry:       &data.RegistryData{DB: db},
-		userData:       &data.UserData{DB: db},
+		userData:       &data.UserDB{DB: db},
 		chatData:       &data.ChatData{DB: db},
 		errlog:         errlog,
 		infolog:        infolog,
