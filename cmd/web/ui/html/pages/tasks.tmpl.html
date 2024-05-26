@@ -10,19 +10,24 @@
     <div class="view">
       <div class="viewHeader">
         <div class="title">Manage Tasks</div>
+        <div class="functions">
+          <div class="button active">Add New Task</div>
+          <div class="button">Completed</div>
+          <div class="button inverz"><i class="fa fa-trash-o"></i></div>
+        </div>
       </div>
       <div class="content">
         {{range .Projects}}
         <div class="list">
           <div class="title">{{.Deadline}}</div>
           <ul>
-            <li><span>Project: {{.Name}}</span>
+            <li class="checked"><i class="fa fa-check-square-o"></i><span>Project: {{.Name}}</span>
               <div class="info">
                 <div class="button green">{{.Status}}</div><span>Complete by {{.Deadline}}</span>
               </div>
             </li>
             {{range .Tasks}}
-            <li><span>{{.Description}}</span>
+            <li><i class="fa fa-square-o"></i><span>{{.Description}}</span>
               <div class="info">
                 <div class="button">{{.Status}}</div><span>Complete by {{.DueDate}}</span>
               </div>
@@ -35,7 +40,6 @@
     </div>
   </div>
 </div>
-
 
 {{end}}
 {{define "chat"}}
@@ -58,6 +62,8 @@
     <header class="clearfix">
 
       <h4>{{.User.Name}}</h4>
+
+      <span class="chat-message-counter">3</span>
 
     </header>
 

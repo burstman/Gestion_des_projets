@@ -268,7 +268,7 @@ func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
-
+	fmt.Println(chatOrder)
 	chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
 		ChatMessage: fmt.Sprintf("%s : %s : %s : %s", chatOrder.Intent, chatOrder.Task, chatOrder.Types, chatOrder.User_name),
 		ChatTime:    time.Now().Format("15:04")})
@@ -371,8 +371,13 @@ func (app *application) userTasksView(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	}
-
+	chathistory, ok := app.sessionManager.Get(r.Context(), "chatMessage").([]*ChatHistory)
+	if !ok {
+		app.serverError(w, fmt.Errorf("enable to extract chat history"))
+	}
+	data.ChatHistories = chathistory
 	data.Projects = projects
+	fmt.Println("data:", data.ChatHistories)
 
 	app.render(w, "tasks.tmpl.html", http.StatusOK, data)
 }
