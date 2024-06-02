@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/burstman/baseRegistry/cmd/web/internal/data"
 	"github.com/go-playground/form/v4"
 )
 
@@ -33,14 +34,13 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 // from the session manager.
 func (app *application) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
-		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
-		
 	}
 }
 func (app *application) isAuthenticated(r *http.Request) bool {
 	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
-	}
+}
 
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
@@ -78,4 +78,47 @@ func (app *application) serverError(w http.ResponseWriter, err error) {
 
 func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
+}
+
+func (app *application) InsertProject(p data.Project) (uint, error) {
+	idProject, err := app.projects.InsertProject(p)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println("Project inserted with ID:", idProject)
+	return idProject, nil
+}
+
+// InsertTask inserts a new task and returns the task ID.
+func (app *application) InsertTask(t data.Task) (uint, error) {
+	taskID, err := app.projects.InsertTask(t)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println("Task inserted with ID:", taskID)
+	return taskID, nil
+}
+
+// AddComment adds a new comment to a task.
+func (app *application) AddComment(c data.Comment) error {
+	_, err := app.projects.AddComment(c)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Comment added")
+	return nil
+}
+
+// AddAttachment adds a new attachment to a task.
+func (app *application) AddAttachment(a data.Attachment) error {
+	_, err := app.projects.AddAttach(a)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Attachment added")
+	return nil
+}
+func (app *application) GetUserID(username string) (uint, error) {
+	id, err := app.projects.GetIDFromUserName(username)
+	return uint(id), err
 }

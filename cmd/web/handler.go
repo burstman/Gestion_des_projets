@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/burstman/baseRegistry/cmd/web/internal/data"
-	"github.com/burstman/baseRegistry/cmd/web/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -39,65 +38,6 @@ type userSignupForm struct {
 	Email    string `form:"email"`
 	Password string `form:"password"`
 	//validator.Validator `form:"-"`
-}
-
-// dataRegistryForm represents a form for submitting data to a registry.
-// It contains fields for the ID number, name, name of sponsor, place of residence,
-// workplace, blood type, and nationality. The Validator field is used for
-// validating the form data.
-type dataRegistryForm struct {
-	IdNumber            string `form:"id_number"`
-	Name                string `form:"name"`
-	NameOfSponsor       string `form:"Name_of_sponsor"`
-	PlaceOfResidence    string `form:"place_of_residence"`
-	Workplace           string `form:"workplace"`
-	BloodType           string `form:"blood_type"`
-	Nationality         string `form:"nationality"`
-	validator.Validator `form:"-"`
-}
-
-// addNewDataRegistry is an HTTP handler function that processes a form submission to create a new data registry entry.
-// It decodes the form data, creates a new registry entry, and redirects the user to the view page for the new entry.
-// If there is a duplicate record error, it displays an error message and renders the createNew.tmpl.html template.
-// If there is any other error, it logs the error and returns a server error response.
-func (app *application) addNewDataRegistry(w http.ResponseWriter, r *http.Request) {
-	var form dataRegistryForm
-	//data. := dataRegistryForm{
-
-	// 	IdNumber:   worker.IDnumber,
-	// 	FieldError: map[string]string{},
-	// }
-	err := app.decodePostForm(r, &form)
-	if err != nil {
-		app.clientError(w, http.StatusBadRequest)
-		return
-	}
-	id, err := app.registry.Insert(data.RegistryWorker{
-		Name:             form.Name,
-		IDnumber:         form.IdNumber,
-		NameOfSponsor:    form.NameOfSponsor,
-		PlaceOfResidence: form.PlaceOfResidence,
-		Workplace:        form.Workplace,
-		BloodType:        form.BloodType,
-		Nationality:      form.Nationality,
-	})
-
-	if err != nil {
-		if errors.Is(err, data.ErrDuplicateRecord) {
-			app.sessionManager.Put(r.Context(), "flash", "Id number all ready exist")
-			data := app.newTemplateData(r)
-			data.Form = form
-			app.render(w, "createNew.tmpl.html", http.StatusUnprocessableEntity, data)
-			return
-		}
-		app.serverError(w, err)
-		return
-	}
-
-	app.sessionManager.Put(r.Context(), "flash", "Data sent successfully!")
-
-	http.Redirect(w, r, fmt.Sprintf("/registry/view/%d", id), http.StatusSeeOther)
-
 }
 
 func (app *application) logoutPost(w http.ResponseWriter, r *http.Request) {
@@ -228,7 +168,7 @@ type userChatForm struct {
 	Message string `form:"message"`
 }
 
-func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
+func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) {
 
 	var form userChatForm
 
@@ -237,7 +177,7 @@ func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusUnprocessableEntity)
 		return
 	}
-	id, ok := app.sessionManager.Get(r.Context(), "authenticatedUserID").(int)
+	userID, ok := app.sessionManager.Get(r.Context(), "authenticatedUserID").(int)
 	if !ok {
 		app.serverError(w, fmt.Errorf("failed to convert authenticatedUserID to int"))
 		return
@@ -247,7 +187,7 @@ func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 		app.errlog.Println("failed to convert chatMessage to []*ChatHistory")
 		return
 	}
-	userData, err := app.userData.Get(id)
+	userData, err := app.userData.Get(userID)
 	if err != nil {
 		app.serverError(w, err)
 		return
@@ -257,34 +197,94 @@ func (app *application) chatMessage(w http.ResponseWriter, r *http.Request) {
 		ChatMessage: form.Message,
 		ChatTime:    time.Now().Format("15:04")})
 
-	chatBotResponse, err := app.sendRecive.SendReceive(id, form.Message)
+	chatBotResponse, err := app.sendRecive.SendReceive(userID, form.Message)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	chatOrder, err := app.chatData.RetrieveUserOrder(chatBotResponse.Id)
-
-	if err != nil {
-		app.serverError(w, err)
-		return
+	var chatOrder *data.ChatOrder
+	if chatBotResponse.Id != 0 {
+		chatOrder, err = app.chatData.RetrieveUserOrder(chatBotResponse.Id)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		fmt.Println(chatOrder)
+		chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+			ChatMessage: fmt.Sprintf("%s : %s : %s : %s : %s", chatOrder.Intent, chatOrder.Projects,
+				chatOrder.Tasks, chatOrder.Users, chatBotResponse.Message),
+			ChatTime: time.Now().Format("15:04")})
+		fmt.Println(len(chatHistories))
+		app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
 	}
-	fmt.Println(chatOrder)
-	chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
-		ChatMessage: fmt.Sprintf("%s : %s : %s : %s : %s", chatOrder.Intent, chatOrder.Task,
-			chatOrder.Types, chatOrder.User_name, chatBotResponse.Message),
-		ChatTime: time.Now().Format("15:04")})
-	fmt.Println(len(chatHistories))
-	app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+	var p data.Project
+	var t data.Task
+	var c data.Comment
+	var a data.Attachment
 
-	// if chatOrder.Intent == "create" && len(chatOrder.Task) != 0 {
-	// 	err := app.insert(chatOrder.Task)
-	// 	if err != nil {
-	// 		app.serverError(w, err)
-	// 		return
-	// 	}
-	// }
+	if chatOrder != nil {
+		switch chatOrder.Intent {
+		case "create":
+			fmt.Println("create")
+			for _, project := range chatOrder.Projects {
+				fmt.Println("project", project)
+				p.Name = &project
+				newTypeUserID := uint(userID)
+				p.CreatedBy = &newTypeUserID
 
-	http.Redirect(w, r, fmt.Sprintf("/tasks/view/%d", id), http.StatusSeeOther)
+				// Insert the project
+				idProject, err := app.InsertProject(p)
+				if err != nil {
+					app.serverError(w, err)
+					return
+				}
+
+				// If there are tasks, insert them
+				for _, taskName := range chatOrder.Tasks {
+					t.ProjectID = &idProject
+					t.Title = &taskName
+
+					taskID, err := app.InsertTask(t)
+					if err != nil {
+						app.serverError(w, err)
+						return
+					}
+
+					// If there are comments, insert them
+					for _, commentText := range chatOrder.Comments {
+						c.TaskID = &taskID
+						c.CommentText = &commentText
+
+						if err := app.AddComment(c); err != nil {
+							app.serverError(w, err)
+							return
+						}
+					}
+
+					// If there are attachments, insert them
+					for _, username := range chatOrder.Users {
+						uploadedByID, err := app.GetUserID(username)
+						if err != nil {
+							app.serverError(w, err)
+							return
+						}
+
+						a.TaskID = &taskID
+						a.UploadedBy = &uploadedByID
+
+						if err := app.AddAttachment(a); err != nil {
+							app.serverError(w, err)
+							return
+						}
+					}
+				}
+			}
+		}
+	} else {
+		fmt.Println("chatorder is nil")
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/tasks/view/%d", userID), http.StatusSeeOther)
 }
 
 // userTasksView is an HTTP handler function that retrieves a data registry entry by its ID.
@@ -310,79 +310,26 @@ func (app *application) userTasksView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
 	data := app.newTemplateData(r)
 	data.User = user
-	projects := []*Project{
-		{
-			Name:        "Project Alpha",
-			Description: "First project",
-			Status:      "In Progress",
-			Deadline:    "2024-06-25",
-			Comment:     map[string]string{"Initial setup": "Completed", "Review": "Pending"},
-			User:        "John Doe",
-			Tasks: []*Task{
-				{
-					ID:          1,
-					Description: "Setup project repository",
-					AssignedTo:  "Alice",
-					Status:      "Completed",
-					DueDate:     "2024-06-25",
-					Comments: []Comment{
-						{Author: "Alice", Text: "Repository created."},
-						{Author: "John", Text: "Reviewed and approved."},
-					},
-				},
-				{
-					ID:          2,
-					Description: "Initial project setup",
-					AssignedTo:  "Bob",
-					Status:      "In Progress",
-					DueDate:     "2024-06-28",
-					Comments: []Comment{
-						{Author: "Bob", Text: "Working on the setup."},
-					},
-				},
-			},
-		},
-		{
-			Name:         "Project Beta",
-			Description:  "Second project",
-			Status:       "Completed",
-			Deadline:     time.Date(2024, time.July, 0, 0, 0, 0, 0, time.UTC).Format("25-06-2015"),
-			CompleatedAt: time.Date(2024, time.July, 10, 0, 0, 0, 0, time.UTC).Format("25-06-2015"),
-			Comment:      map[string]string{"Final presentation": "Completed"},
-			User:         "Jane Smith",
-			Tasks: []*Task{
-				{
-					ID:          3,
-					Description: "Create project plan",
-					AssignedTo:  "Charlie",
-					Status:      "Completed",
-					DueDate:     "2024-07-05",
-					Comments: []Comment{
-						{Author: "Charlie", Text: "Project plan created."},
-					},
-				},
-				{
-					ID:          4,
-					Description: "Conduct team meeting",
-					AssignedTo:  "Dave",
-					Status:      "Completed",
-					DueDate:     "2024-07-08",
-					Comments: []Comment{
-						{Author: "Dave", Text: "Team meeting held."},
-						{Author: "Jane", Text: "Meeting notes shared."},
-					},
-				},
-			},
-		},
+	projects, err := app.projects.GetAllProjects()
+	if err != nil {
+		app.serverError(w, err)
+		return
 	}
 	chathistory, ok := app.sessionManager.Get(r.Context(), "chatMessage").([]*ChatHistory)
 	if !ok {
 		app.serverError(w, fmt.Errorf("enable to extract chat history"))
 	}
+	users, err := app.userData.GetAllUserNames()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 	data.ChatHistories = chathistory
 	data.Projects = projects
+	data.ListUsers = users
 	fmt.Println("data:", data.ChatHistories)
 
 	app.render(w, "tasks.tmpl.html", http.StatusOK, data)

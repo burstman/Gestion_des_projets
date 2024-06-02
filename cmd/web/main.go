@@ -41,7 +41,7 @@ type config struct {
 var cfg config
 
 type application struct {
-	registry        *data.RegistryData
+	projects        *data.ProjectManager
 	userData        *data.UserDB
 	chatData        *data.ChatData
 	errlog, infolog *log.Logger
@@ -86,7 +86,7 @@ func main() {
 	chat := chatApi.NewSenderReceive("http://localhost:8000/send_data")
 
 	app := &application{
-		registry:       &data.RegistryData{DB: db},
+		projects:       &data.ProjectManager{DB: db},
 		userData:       &data.UserDB{DB: db},
 		chatData:       &data.ChatData{DB: db},
 		errlog:         errlog,

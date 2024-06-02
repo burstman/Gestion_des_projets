@@ -40,6 +40,30 @@ func (r *UserDB) Get(id int) (*User, error) {
 	return user, nil
 }
 
+func (r *UserDB) GetAllUserNames() ([]*User, error) {
+	stmt := `SELECT username FROM users`
+	users := []*User{}
+
+	row, err := r.DB.Query(stmt)
+	for row.Next() {
+		var u User
+		err := row.Scan(&u.Name)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &u)
+	}
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		} else {
+			return nil, err
+		}
+	}
+
+	return users, nil
+}
+
 // Register adds a new authentication record to the database. If a record with the
 // same name or email already exists, it returns ErrDuplicateName or ErrDuplicateEmail.
 func (r *UserDB) Register(u User) (int, error) {

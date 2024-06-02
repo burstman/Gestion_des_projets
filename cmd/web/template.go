@@ -19,32 +19,6 @@ import (
 // Flash is a string that likely represents a temporary message or notification to
 // be displayed to the user.
 
-type Comment struct {
-	Author string
-	Text   string
-}
-
-type Task struct {
-	ID          int
-	Description string
-	AssignedTo  string
-	Status      string
-	DueDate     string
-	Comments    []Comment
-}
-
-type Project struct {
-	Name         string
-	Description  string
-	Status       string
-	Deadline     string
-	CompleatedAt string
-	Comment      map[string]string
-	User         string
-	//Participants map[string]string
-	Tasks []*Task
-}
-
 type ChatHistory struct {
 	ChatUser    string
 	ChatTime    string
@@ -52,9 +26,10 @@ type ChatHistory struct {
 }
 
 type templateData struct {
-	Projects        []*Project
+	Projects        []*data.Project
 	ChatHistories   []*ChatHistory
 	User            *data.User
+	ListUsers       []*data.User
 	Form            any
 	Flash           string //message to be displayed to the user
 	IsAuthenticated bool   // authenticated user

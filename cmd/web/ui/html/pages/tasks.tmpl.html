@@ -4,37 +4,46 @@
 <div class="page">
   <div class="pageHeader">
     <div class="title">Dashboard</div>
-    <div class="userPanel"><i class="fa fa-chevron-down"></i><span class="username"> {{.User.Name}}</span></div>
+    <div class="userPanel"><i class="fa fa-chevron-down"></i><span class="username"> {{.User}}</span></div>
   </div>
   <div class="main">
+    <div class="nav">
+
+      <ul class="teamList">
+        <li>Team</li>
+        {{range .ListUsers}}
+        <li>{{.Name}}</li>
+        {{end}}
+      </ul>
+    </div>
     <div class="view">
       <div class="viewHeader">
         <div class="title">Manage Tasks</div>
-        <div class="functions">
-          <div class="button active">Add New Task</div>
-          <div class="button">Completed</div>
-          <div class="button inverz"><i class="fa fa-trash-o"></i></div>
-        </div>
+
       </div>
       <div class="content">
+        {{if .Projects}}
         {{range .Projects}}
         <div class="list">
-          <div class="title">{{.Deadline}}</div>
           <ul>
-            <li class="checked"><i class="fa fa-check-square-o"></i><span>Project: {{.Name}}</span>
-              <div class="info">
-                <div class="button green">{{.Status}}</div><span>Complete by {{.Deadline}}</span>
-              </div>
-            </li>
+            <div class="title">
+              <p>Project: {{.Name}} : Description {{.Description}}</p>
+              <p>Deadline:(to do...)</p>
+            </div>
             {{range .Tasks}}
-            <li><i class="fa fa-square-o"></i><span>{{.Description}}</span>
+            <li> <b>Task:{{.Description}}</b>
               <div class="info">
-                <div class="button">{{.Status}}</div><span>Complete by {{.DueDate}}</span>
+                <div class="button">{{.Status}}</div><span>deadline: (to do...)</span>
               </div>
             </li>
+            <li><span>Attachment:</span></li>
+            <li><span>Comment:</span></li>
             {{end}}
           </ul>
         </div>
+        {{end}}
+        {{else}}
+        <p class="empty-message">No projects available</p>
         {{end}}
       </div>
     </div>
@@ -73,7 +82,7 @@
         <div class="chat">
 
           <div class="chat-history">
-            
+
             {{range .ChatHistories}}
             <div class="chat-message clearfix">
 
@@ -96,10 +105,10 @@
 
             <form action="/user/sendmessage" method="post">
 
-             
 
-                <input type="text" name="message" autofocus>
-                <input type="submit" value="Send">
+
+              <input type="text" name="message" autofocus>
+              <input type="submit" value="Send">
 
 
             </form>
