@@ -7,12 +7,13 @@ import (
 )
 
 type ChatOrder struct {
-	Intent   string   `json:"intent"`
-	Tasks    []string `json:"tasks"`
-	Users    []string `json:"users"`
-	Comments []string `json:"comments"`
-	Projects []string `json:"projects"`
-	Deadline []string `json:"deadline"`
+	Intent      string   `json:"intent"`
+	Tasks       []string `json:"tasks"`
+	Users       []string `json:"users"`
+	Comments    []string `json:"comments"`
+	Projects    []string `json:"projects"`
+	Deadline    []string `json:"deadline"`
+	Description []string `json:"description"`
 }
 type Record struct {
 	ID   int

@@ -26,7 +26,7 @@ type ChatHistory struct {
 }
 
 type templateData struct {
-	Projects        []*data.Project
+	Projects        []data.Project
 	ChatHistories   []*ChatHistory
 	User            *data.User
 	ListUsers       []*data.User

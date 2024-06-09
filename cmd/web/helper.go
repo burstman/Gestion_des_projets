@@ -80,7 +80,7 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (app *application) InsertProject(p data.Project) (uint, error) {
+func (app *application) InsertProject(p data.Project) (int64, error) {
 	idProject, err := app.projects.InsertProject(p)
 	if err != nil {
 		return 0, err
@@ -90,7 +90,7 @@ func (app *application) InsertProject(p data.Project) (uint, error) {
 }
 
 // InsertTask inserts a new task and returns the task ID.
-func (app *application) InsertTask(t data.Task) (uint, error) {
+func (app *application) InsertTask(t data.Task) (int64, error) {
 	taskID, err := app.projects.InsertTask(t)
 	if err != nil {
 		return 0, err
@@ -118,7 +118,17 @@ func (app *application) AddAttachment(a data.Attachment) error {
 	fmt.Println("Attachment added")
 	return nil
 }
-func (app *application) GetUserID(username string) (uint, error) {
+func (app *application) GetUserID(username string) (int64, error) {
 	id, err := app.projects.GetIDFromUserName(username)
-	return uint(id), err
+	return id, err
+}
+
+func (app *application) GetProjectID(username string) (int64, error) {
+	id, err := app.projects.GetIDFromProjectName(username)
+	return id, err
+}
+
+func (app *application) GetTaskID(title string) (int64, error) {
+	id, err := app.projects.GetIDFromTaskName(title)
+	return id, err
 }

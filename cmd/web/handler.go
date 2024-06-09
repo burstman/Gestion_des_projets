@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/burstman/baseRegistry/cmd/web/internal/data"
@@ -105,7 +106,13 @@ func (app *application) postLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	//Add ID to the session Manager
 	app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
-	chatHistories := []*ChatHistory{}
+	chatHistories := []*ChatHistory{
+		{
+			ChatMessage: "Welcome to the \"Task Manager\" what can i help you today?",
+			ChatTime:    time.Now().Format("15:04"),
+			ChatUser:    "Bot",
+		},
+	}
 	app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
 
 	// Use the PopString method to retrieve and remove a value from the session
@@ -169,7 +176,6 @@ type userChatForm struct {
 }
 
 func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) {
-
 	var form userChatForm
 
 	err := app.decodePostForm(r, &form)
@@ -177,6 +183,8 @@ func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) 
 		app.clientError(w, http.StatusUnprocessableEntity)
 		return
 	}
+	form.Message = strings.ReplaceAll(form.Message, "\"", "'")
+
 	userID, ok := app.sessionManager.Get(r.Context(), "authenticatedUserID").(int)
 	if !ok {
 		app.serverError(w, fmt.Errorf("failed to convert authenticatedUserID to int"))
@@ -203,8 +211,10 @@ func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	var chatOrder *data.ChatOrder
+	fmt.Println("chatresponse", chatBotResponse.Id)
 	if chatBotResponse.Id != 0 {
 		chatOrder, err = app.chatData.RetrieveUserOrder(chatBotResponse.Id)
+		//fmt.Println("chatresponse", *chatOrder)
 		if err != nil {
 			app.serverError(w, err)
 			return
@@ -216,6 +226,14 @@ func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) 
 			ChatTime: time.Now().Format("15:04")})
 		fmt.Println(len(chatHistories))
 		app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+	} else {
+		chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+			ChatMessage: chatBotResponse.Message,
+			ChatTime:    time.Now().Format("15:04")})
+		app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+
+		http.Redirect(w, r, fmt.Sprintf("/tasks/view/%d", userID), http.StatusSeeOther)
+		return
 	}
 	var p data.Project
 	var t data.Task
@@ -226,49 +244,123 @@ func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) 
 		switch chatOrder.Intent {
 		case "create":
 			fmt.Println("create")
-			for _, project := range chatOrder.Projects {
-				fmt.Println("project", project)
-				p.Name = &project
-				newTypeUserID := uint(userID)
-				p.CreatedBy = &newTypeUserID
+			var idProject, taskID int64
+			if len(chatOrder.Projects) > 0 {
+				for _, project := range chatOrder.Projects {
+					fmt.Println("project", project)
 
-				// Insert the project
-				idProject, err := app.InsertProject(p)
-				if err != nil {
-					app.serverError(w, err)
-					return
-				}
-
-				// If there are tasks, insert them
-				for _, taskName := range chatOrder.Tasks {
-					t.ProjectID = &idProject
-					t.Title = &taskName
-
-					taskID, err := app.InsertTask(t)
+					idProject, err = app.GetProjectID(project)
 					if err != nil {
 						app.serverError(w, err)
 						return
 					}
 
-					// If there are comments, insert them
-					for _, commentText := range chatOrder.Comments {
-						c.TaskID = &taskID
-						c.CommentText = &commentText
+					p.Name = &project
+					createdByInt64 := int64(userData.Id)
+					p.CreatedBy = &createdByInt64
+					fmt.Println(p.CreatedBy)
+					// Insert the project
+					if idProject == 0 {
+						idProject, err = app.InsertProject(p)
+					}
+					if err != nil {
+						app.serverError(w, err)
+						return
+					}
+				}
+			} else {
+				fmt.Println("no project")
+				chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+					ChatMessage: "please refrase you word and spacify a project availeble"})
+				app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+			}
 
-						if err := app.AddComment(c); err != nil {
-							app.serverError(w, err)
-							return
+			if len(chatOrder.Tasks) > 0 && len(chatOrder.Projects) > 0 {
+				fmt.Println("Ok Task")
+				for _, taskName := range chatOrder.Tasks {
+					t.ProjectID = &idProject
+					t.Title = &taskName
+
+					t.CreatedBy = userData
+					fmt.Println("task Name:", taskName)
+					fmt.Println("task projectID:", idProject)
+					idTask, err := app.GetTaskID(taskName)
+					if err != nil {
+						app.serverError(w, err)
+						return
+					}
+					fmt.Printf("taskID: %d\n", idTask)
+					if idTask == 0 {
+						taskID, err = app.InsertTask(t)
+					}
+					if err != nil {
+						app.serverError(w, err)
+						return
+					} else {
+						if len(chatOrder.Projects) == 0 {
+							fmt.Println("no project")
+							chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+								ChatMessage: "please refrase you word and spacify a project availeble"})
+							app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+						} else if len(chatOrder.Tasks) == 0 {
+							fmt.Println("no task")
+							chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+								ChatMessage: "please refrase you word and specify a task availeble"})
+							app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
 						}
 					}
 
-					// If there are attachments, insert them
+					if len(chatOrder.Projects) > 0 && len(chatOrder.Tasks) > 0 && len(chatOrder.Comments) > 0 {
+						fmt.Println("Comment", chatOrder.Comments)
+						taskID, err = app.GetTaskID(*t.Title)
+						if err != nil {
+							app.serverError(w, err)
+							return
+						}
+						for _, commentText := range chatOrder.Comments {
+							c.TaskID = &taskID
+							c.User.Id = userID
+							c.CommentText = &commentText
+
+							if err := app.AddComment(c); err != nil {
+								app.serverError(w, err)
+								return
+							}
+						}
+					} else {
+						if len(chatOrder.Projects) == 0 {
+							fmt.Println("no project")
+							chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+								ChatMessage: "please refrase you word and spacify a project availeble"})
+							app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+						} else if len(chatOrder.Tasks) == 0 {
+							fmt.Println("no task")
+							chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+								ChatMessage: "please refrase you word and specify a task availeble"})
+							app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+						}
+
+					}
+
+				}
+			} else {
+				fmt.Println("Projects=", len(chatOrder.Projects))
+			}
+		case "assign":
+			if len(chatOrder.Projects) > 0 && len(chatOrder.Tasks) > 0 && len(chatOrder.Users) > 0 {
+				for _, taskName := range chatOrder.Tasks {
 					for _, username := range chatOrder.Users {
 						uploadedByID, err := app.GetUserID(username)
 						if err != nil {
 							app.serverError(w, err)
 							return
 						}
-
+						t.Title = &taskName
+						taskID, err := app.GetTaskID(*t.Title)
+						if err != nil {
+							app.serverError(w, err)
+							return
+						}
 						a.TaskID = &taskID
 						a.UploadedBy = &uploadedByID
 
@@ -277,11 +369,85 @@ func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) 
 							return
 						}
 					}
+
 				}
+
+			}
+		case "update":
+			fmt.Println("update")
+			if len(chatOrder.Tasks) == 0 {
+				for _, project := range chatOrder.Projects {
+					fmt.Println("project", project)
+					idproject, err := app.GetProjectID(project)
+					if err != nil {
+						app.serverError(w, err)
+						return
+					}
+					if idproject != 0 {
+						fmt.Println("description project ok")
+						for _, description := range chatOrder.Description {
+							err := app.projects.UpdateprojectDescription(idproject, description)
+							if err != nil {
+								app.serverError(w, err)
+								return
+							}
+						}
+						for _, deadline := range chatOrder.Deadline {
+							err := app.projects.UpdateprojectDeadline(idproject, deadline)
+							if err != nil {
+								app.serverError(w, err)
+								return
+							}
+						}
+					}
+				}
+				if len(chatOrder.Projects) == 0 {
+					fmt.Println("no project")
+				}
+			} else {
+				for _, project := range chatOrder.Projects {
+					fmt.Println("project", project)
+					idproject, err := app.GetProjectID(project)
+					if err != nil {
+						app.serverError(w, err)
+						return
+					}
+					for _, task := range chatOrder.Tasks {
+
+						idTask, err := app.GetTaskID(task)
+						if err != nil {
+							app.serverError(w, err)
+							return
+						}
+						if idproject != 0 && idTask != 0 {
+							for _, description := range chatOrder.Description {
+								err := app.projects.UpdateTaskDescription(idproject, idTask, description)
+								if err != nil {
+									app.serverError(w, err)
+									return
+								}
+							}
+
+							for _, deadline := range chatOrder.Deadline {
+								err := app.projects.UpdateTaskDeadline(idproject, idTask, deadline)
+								if err != nil {
+									app.serverError(w, err)
+									return
+								}
+							}
+						}
+					}
+				}
+
 			}
 		}
+
 	} else {
-		fmt.Println("chatorder is nil")
+		//fmt.Println("chatorder is nil")
+		chatHistories = append(chatHistories, &ChatHistory{ChatUser: "Bot",
+			ChatMessage: "please refrase you words and specify an order availeble"})
+		app.sessionManager.Put(r.Context(), "chatMessage", chatHistories)
+
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/tasks/view/%d", userID), http.StatusSeeOther)
@@ -318,6 +484,17 @@ func (app *application) userTasksView(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+	//Enhanced debugging output
+	// for i, project := range projects {
+	// 	fmt.Printf("Project %d: %+v\n", i, project)
+	// 	for j, task := range project.Tasks {
+	// 		fmt.Printf("  Task %d: %+v\n", j, task)
+	// 		for k, comment := range task.Comments {
+	// 			fmt.Printf("    Comment %d: %+v\n", k+1, &comment.CommentText)
+	// 		}
+	// 	}
+	// }
+
 	chathistory, ok := app.sessionManager.Get(r.Context(), "chatMessage").([]*ChatHistory)
 	if !ok {
 		app.serverError(w, fmt.Errorf("enable to extract chat history"))
@@ -330,7 +507,7 @@ func (app *application) userTasksView(w http.ResponseWriter, r *http.Request) {
 	data.ChatHistories = chathistory
 	data.Projects = projects
 	data.ListUsers = users
-	fmt.Println("data:", data.ChatHistories)
+	//fmt.Println("data:", data.ChatHistories)
 
 	app.render(w, "tasks.tmpl.html", http.StatusOK, data)
 }

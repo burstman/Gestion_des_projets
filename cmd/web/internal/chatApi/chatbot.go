@@ -55,7 +55,7 @@ func (m *Message) SendReceive(Id int, data string) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Println(receivedMessage)
+	fmt.Println("receive message", receivedMessage.Id)
 
 	return &receivedMessage, nil
 }

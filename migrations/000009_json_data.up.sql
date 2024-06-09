@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS chat_messages (
+CREATE TABLE IF NOT EXISTS json_data (
     id SERIAL PRIMARY KEY,
     data JSON
 );

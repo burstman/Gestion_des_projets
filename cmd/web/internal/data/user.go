@@ -21,9 +21,11 @@ type UserDB struct {
 	DB *sql.DB
 }
 
+// Get retrieves a user record from the database by their ID. If no record is found,
+// it returns ErrNoRecord.
 func (r *UserDB) Get(id int) (*User, error) {
 	stmt := `SELECT username, email FROM users WHERE user_id=$1`
-	user := &User{}
+	user := &User{Id: id}
 
 	err := r.DB.QueryRow(stmt, id).Scan(
 		&user.Name,
