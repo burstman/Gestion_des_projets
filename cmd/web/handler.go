@@ -427,6 +427,16 @@ func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) 
 									return
 								}
 							}
+							for _, commentText := range chatOrder.Comments {
+								c.TaskID = &idTask
+								c.User.Id = userID
+								c.CommentText = &commentText
+
+								if err := app.AddComment(c); err != nil {
+									app.serverError(w, err)
+									return
+								}
+							}
 
 							for _, deadline := range chatOrder.Deadline {
 								err := app.projects.UpdateTaskDeadline(idproject, idTask, deadline)
