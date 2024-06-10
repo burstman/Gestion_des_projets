@@ -52,6 +52,7 @@ body {
   /* Chat History Styles */
   .chat-history {
 	flex: 1;
+	max-height: 400px;
 	padding: 10px;
 	overflow-y: auto;
   }

@@ -386,7 +386,7 @@ func (app *application) SendchatMessage(w http.ResponseWriter, r *http.Request) 
 					if idproject != 0 {
 						fmt.Println("description project ok")
 						for _, description := range chatOrder.Description {
-							err := app.projects.UpdateprojectDescription(idproject, description)
+							err := app.projects.UpdateProjectDescription(idproject, description)
 							if err != nil {
 								app.serverError(w, err)
 								return

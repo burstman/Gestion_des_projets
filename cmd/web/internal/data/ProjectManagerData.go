@@ -20,6 +20,7 @@ type Project struct {
 	Description *string
 	CreatedBy   *int64
 	CreatedAt   *time.Time
+	Deadline    *string
 	Tasks       []Task
 }
 
@@ -53,8 +54,8 @@ type Task struct {
 	TaskID      int64
 	Title       *string
 	Description *string
-	Status      *bool
-	DueDate     *time.Time
+	Status      *string
+	DueDate     *string
 	CreatedBy   *User
 	ProjectID   *int64
 	AssignedTo  []*User
@@ -138,7 +139,7 @@ func (pm *ProjectManager) AddComment(c Comment) (int64, error) {
 func (pm *ProjectManager) GetAllProjects() ([]Project, error) {
 	query := `
 		SELECT
-			p.project_id, p.name, p.description, p.created_at, p.created_by, pc.username, pc.email,
+			p.project_id, p.name, p.description, p.created_at, p.deadline, p.created_by, pc.username, pc.email,
 			t.task_id, t.title, t.description, t.status, t.due_date, t.created_at, t.created_by, tc.username, tc.email,
 			tua.user_id AS assigned_user_id, tua.username AS assigned_username, tua.email AS assigned_email,
 			c.comment_id, c.user_id, cu.username, cu.email, c.comment_text, c.created_at
@@ -172,17 +173,16 @@ func (pm *ProjectManager) GetAllProjects() ([]Project, error) {
 		var (
 			pID, tID, cID, assignedUserID                        sql.NullInt64
 			pName, pDescription, tTitle, tDescription            sql.NullString
-			tStatus                                              sql.NullBool
-			cText                                                sql.NullString
+			cText, tStatus                                       sql.NullString
 			pCreatedAt, tCreatedAt, cCreatedAt                   sql.NullTime
 			pCreatedBy, tCreatedBy, cUserID                      sql.NullInt64
 			pcUsername, tcUsername, assignedUsername, cuUsername sql.NullString
 			pcEmail, tcEmail, assignedEmail, cuEmail             sql.NullString
-			tDueDate                                             sql.NullTime
+			tDueDate, pDeadline                                  sql.NullTime
 		)
 
 		err := rows.Scan(
-			&pID, &pName, &pDescription, &pCreatedAt, &pCreatedBy, &pcUsername, &pcEmail,
+			&pID, &pName, &pDescription, &pCreatedAt, &pDeadline, &pCreatedBy, &pcUsername, &pcEmail,
 			&tID, &tTitle, &tDescription, &tStatus, &tDueDate, &tCreatedAt, &tCreatedBy, &tcUsername, &tcEmail,
 			&assignedUserID, &assignedUsername, &assignedEmail,
 			&cID, &cUserID, &cuUsername, &cuEmail, &cText, &cCreatedAt,
@@ -206,7 +206,9 @@ func (pm *ProjectManager) GetAllProjects() ([]Project, error) {
 				Description: StringPointer(pDescription),
 				CreatedAt:   TimePointer(pCreatedAt),
 				CreatedBy:   IntPointer(pCreatedBy),
-				Tasks:       []Task{},
+				Deadline:    formatDate(pDeadline),
+
+				Tasks: []Task{},
 			}
 			projects = append(projects, *project)
 			project = &projects[len(projects)-1]
@@ -226,8 +228,8 @@ func (pm *ProjectManager) GetAllProjects() ([]Project, error) {
 				ProjectID:   &pID.Int64,
 				Title:       StringPointer(tTitle),
 				Description: StringPointer(tDescription),
-				Status:      BoolPointer(tStatus),
-				DueDate:     TimePointer(tDueDate),
+				Status:      StringPointer(tStatus),
+				DueDate:     formatDate(tDueDate),
 				CreatedAt:   TimePointer(tCreatedAt),
 				CreatedBy: &User{
 					Id:    int(tCreatedBy.Int64),
@@ -273,6 +275,14 @@ func (pm *ProjectManager) GetAllProjects() ([]Project, error) {
 	// Final debug print
 	//fmt.Printf("Projects after processing: %+v\n", projects)
 	return projects, nil
+}
+
+func formatDate(t sql.NullTime) *string {
+	if t.Valid {
+		formatted := t.Time.Format("02/01/2006") // dd/mm/yyyy format
+		return &formatted
+	}
+	return nil
 }
 
 // StringPointer converts sql.NullString to *string
@@ -335,7 +345,7 @@ func (pm *ProjectManager) GetIDFromUserName(name string) (int64, error) {
 	return 0, errors.New("user not found")
 }
 
-func (pm *ProjectManager) UpdateprojectDescription(idProject int64, text string) error {
+func (pm *ProjectManager) UpdateProjectDescription(idProject int64, text string) error {
 	fmt.Printf("Updating project description: %d  %s\n", idProject, text)
 	query := "UPDATE projects SET description = $1 WHERE project_id = $2"
 	result, err := pm.DB.Exec(query, text, idProject)
@@ -364,8 +374,13 @@ func (pm *ProjectManager) UpdateTaskDescription(idTask, idProject int64, text st
 }
 
 func (pm *ProjectManager) UpdateprojectDeadline(idProject int64, date string) error {
+	dueDate, err := time.Parse("02/01/2006", date)
+	if err != nil {
+		return fmt.Errorf("error parsing date: %v", err)
+	}
+
 	query := "UPDATE projects SET deadline = $1 WHERE project_id = $2;"
-	_, err := pm.DB.Exec(query, date, idProject)
+	_, err = pm.DB.Exec(query, dueDate, idProject)
 	if err != nil {
 		return fmt.Errorf("failed to update project description: %w", err)
 	}
@@ -373,8 +388,13 @@ func (pm *ProjectManager) UpdateprojectDeadline(idProject int64, date string) er
 }
 
 func (pm *ProjectManager) UpdateTaskDeadline(idTask, idProject int64, date string) error {
+	dueDate, err := time.Parse("02/01/2006", date)
+	if err != nil {
+		return fmt.Errorf("error parsing date: %v", err)
+	}
+
 	query := "UPDATE tasks SET due_date = $1 WHERE task_id = $2 AND project_id = $3"
-	_, err := pm.DB.Exec(query, date, idTask, idProject)
+	_, err = pm.DB.Exec(query, dueDate, idTask, idProject)
 	if err != nil {
 		return fmt.Errorf("failed to update project description: %w", err)
 	}

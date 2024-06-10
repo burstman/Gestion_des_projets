@@ -4,7 +4,7 @@
 <div class="page">
   <div class="pageHeader">
     <div class="title">Dashboard</div>
-    <div class="userPanel"><i class="fa fa-chevron-down"></i><span class="username"> {{.User.Name}}</span></div>
+    <div class="userPanel"><i class="fa fa-chevron-down"></i><span class="username">{{.User.Name}}</span></div>
   </div>
   <div class="main">
     <div class="nav">
@@ -32,11 +32,23 @@
                 No description
                 {{end}}
               </p>
-              <p>Deadline:(to do...)</p>
+              {{if .Deadline}}
+              <p>Deadline: {{.Deadline}}</p>
+              {{else}}
+              <p>Deadline not set</p>
+              {{end}}
             </div>
+            {{if .Tasks}}
             {{range .Tasks}}
             <li>
-              <b>Task: {{.Title}} | Description:
+              
+              <b>Task: 
+                {{if .Title}}
+                {{.Title}}
+                {{else}}
+                No Task
+                {{end}}
+                | Description:
                 {{if .Description}}
                 {{.Description}}
                 {{else}}
@@ -44,7 +56,13 @@
                 {{end}}
               </b>
               <div class="info">
-                <div class="button">{{.Status}}</div><span>deadline: (to do...)</span>
+                <div class="button">{{.Status}}</div><span>
+                  {{if .DueDate}}
+                  deadline: {{.DueDate}}
+                  {{else}}
+                  deadline not set
+                  {{end}}
+                </span>
               </div>
             </li>
             <li>
@@ -53,10 +71,11 @@
                 {{range .Comments}}
                 {{.User.Name}}: {{.CommentText}} |
                 {{end}}
-              </span>
+              
               {{else}}
-              <span>No comments</span>
+              No comments
               {{end}}
+            </span>
             </li>
             <li>
               <span>Assigned to:
@@ -70,6 +89,9 @@
               </span>
 
             </li>
+            {{end}}
+            {{else}}
+            <li>No tasks available</li>
             {{end}}
           </ul>
         </div>
